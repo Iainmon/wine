@@ -1,0 +1,28 @@
+{
+  "name": "grapejuice",
+  "version": "0.1.1",
+  "description": "A highly customizable project environment command line tool.",
+  "main": "wine",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Iainmon/wine.git"
+  },
+  "keywords": [
+    "wine",
+    "grapejuice",
+    "grape-juice",
+    "grape",
+    "winejs"
+  ],
+  "author": "Iain Moncrief",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Iainmon/wine/issues"
+  },
+  "homepage": "https://github.com/Iainmon/wine#readme",
+  "dependencies": {
+    "async-threading": "^1.0.2",
+    "fs": "0.0.1-security"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "wine": {
+    "printCommands": true,
+    "wineryfile": "./winery.js",
+    "usingwinepackage" : "none"
+  }
+}
