@@ -303,7 +303,7 @@ class Wine {
 
         if (!readlineSync.keyInYN(`Exporting from '${exportingPackageName}' will overwrite your wineryfile and winery folder (if it exists). Continue?`)) return Wine.sip('Aborted!');
 
-        if (!!!packageConfig.wine.grapeseedsfile) return Wine.sip('This package has a wine.json but no grape-seeds.json file.');
+        if (!!!packageConfig.wine.grapeseedsconfig) return Wine.sip('This package has a wine.json but no grape-seeds.json file.');
         if (!(fs.existsSync(`./node_modules/${exportingPackageName}/${packageConfig.wine.grapeseedsconfig}`) || fs.existsSync(`./node_modules/${exportingPackageName}/grape-seeds.json`))) return Wine.sip('This package is not a wine package.');
 
         let grapeseedsConfig;
