@@ -179,6 +179,11 @@ class Wine {
     }
 
     static setFile(options) {
+        if (options.override === true) {
+            fs.writeFileSync(`./${options.file}`, options.data);
+            console.log(`Your ${options.file} has been created or updated.`);
+            return
+        }
         if (!fs.existsSync(`./${options.file}`)) {
             fs.writeFileSync(`./${options.file}`, options.data);
             console.log(`Your ${options.file} has been created.`);
@@ -275,6 +280,7 @@ class Wine {
             Wine.setFile({
                 file : 'wine.json',
                 data : JSON.stringify(this.config, null, 2),
+                override : true
             });
         }
 
@@ -324,6 +330,7 @@ class Wine {
         Wine.setFile({
             file : 'wine.json',
             data : JSON.stringify(this.config, null, 2),
+            override : true
         });
 
         if (fs.existsSync('./winery.js')) return Wine.sip('Your winery.js is no longer in use. You may remove it.');
