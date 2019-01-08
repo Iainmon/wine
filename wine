@@ -1,4 +1,5 @@
 const fs = require('fs');
+const readlineSync = require('readline-sync');
 const winetxt =
     `\x1b[31m
 ,--.   ,--. ,--.
@@ -15,11 +16,6 @@ const defaultJSON = {
         usingwinepackage : 'none'
     }
 };
-
-var Commands = {
-
-};
-
 
 class Wine {
     constructor() {
@@ -40,7 +36,11 @@ class Wine {
 
     static integrityCheck() {
         //Wine.sip('Running integrity check.');
-        return ((fs.existsSync('./winery/winery.js') || fs.existsSync('./winery.js')) && fs.existsSync('./wine.json'));
+        try {
+            return fs.existsSync(require('./wine.json').wine.wineryfile);
+        } catch (e) {
+            return false;
+        }
     }
 
 
@@ -66,6 +66,10 @@ class Wine {
                 this.install(args);
                 break;
 
+            case 'plant':
+                this.plant();
+                break;
+
             case 'bottle':
                 this.loadBottle(args);
                 break;
@@ -79,7 +83,7 @@ class Wine {
         if (!args[1]) return Wine.sip('Please specify a bottle.');
         try {
             try {
-                this.imports.Bottle = require('./winery/bottles/' + args[1] + '.js');
+                this.imports.Bottle = require(this.config.wine.wineryfile + '/bottles/' + args[1] + '.js');
             } catch (e) {
                 Wine.sip('Cannot find the `' + args[1] + '` bottle.')
             }
@@ -98,10 +102,49 @@ class Wine {
         }
     }
 
-    loadWinery(args) {
+    loadInstalledWinery(args) {
         try {
             try {
-                this.imports.Winery = require(this.config.wineryfile);
+                this.imports.Winery = require(this.config.wine.wineryfile);
+            } catch (e) {
+                return Wine.sip('Your winery file could not be found. Please check your wine.json file.');
+            }
+            this.winery = new this.imports.Winery();
+            let script = this.winery.action(args);
+
+            if (!script) return Wine.sip('No script defined for that command!');
+
+            Wine.sip(script.startText);
+
+            Wine.sip('|---------- Opening Wine Box ----------|');
+
+            try {
+                script.run(args);
+                Wine.sip('|---------- Closing Wine Box ----------|');
+                Wine.sip('All done!');
+            } catch (e) {
+                Wine.sip('|---------- Closing Wine Box ----------|');
+                Wine.sip('There was an error when spinning up your winery.');
+            }
+
+        } catch (e) {
+            if (this.config.wine.printCommands) {
+                console.log(e);
+            }
+            console.log('Your winery file or application threw an error. The error has been logged in your wine.log file.');
+            Wine.errlog(e);
+        }
+    }
+
+    loadWinery(args) {
+
+
+    }
+
+    loadUserWinery(args) {
+        try {
+            try {
+                this.imports.Winery = require(this.config.wine.wineryfile);
             } catch (e) {
                 return Wine.sip('Your winery file could not be found. Please check your wine.json file.');
             }
@@ -164,7 +207,7 @@ class Wine {
 
         Wine.setFile({
             file : 'wine.json',
-            data : JSON.stringify(defaultJSON),
+            data : JSON.stringify(defaultJSON, null, 2),
         });
 
         Wine.setFile({
@@ -174,7 +217,7 @@ class Wine {
 
         Wine.sip('Running `npm install` and `npm update`.');
 
-        this.imports.cmd('npm install; npm update;');
+        this.imports.cmd('npm install grapejuice; npm install; npm update;');
 
         Wine.sip('Please configure your wine files, and then run `node wine init`.');
 
@@ -186,7 +229,7 @@ class Wine {
             this.config = require('./wine.json');
         } catch (e) {
             Wine.sip('Reading wine.json failed.');
-            if (this.integrity) {
+            if (!this.integrity) {
                 this.firstTime();
             } else {
                 Wine.sip('This requires a human to fix. ORIGIN: reading wine.json');
@@ -223,28 +266,48 @@ class Wine {
             return failanddelete('The package config is not configured correctly.');
         }
 
-        if (!!!packageConfig.wine.grapeseedsfile) return failanddelete('This package has a wine.json but no grape-seeds.json file.');
-        if (!(fs.existsSync(`./node_modules/${packageName}/${packageConfig.wine.grapeseedsfile}`) || fs.existsSync(`./node_modules/${packageName}/grape-seeds.json`))) return failanddelete('This package is not a wine package.');
+        Wine.sip(`The installation of ${packageName} was successful!`);
+        Wine.sip(`Read the README.md file for ${packageName} before you use it.`);
+    }
+
+    plant() {
+
+        let exportingPackageName = this.config.wine.usingwinepackage;
+
+        if ((!exportingPackageName) || exportingPackageName === 'none') return Wine.sip('It please install a wine package, and declare it in your wine.json.');
+        let packageConfig;
+        try {
+            packageConfig = require(`./node_modules/${exportingPackageName}/wine.json`);
+        } catch (e) {
+            return Wine.sip(`Could not load ${exportingPackageName}'s wine.json.`);
+        }
+
+        if (!readlineSync.keyInYN(`Exporting from '${exportingPackageName}' will overwrite your wineryfile and winery folder (if it exists). Continue?`)) return Wine.sip('Aborted!');
+
+        if (!!!packageConfig.wine.grapeseedsfile) return Wine.sip('This package has a wine.json but no grape-seeds.json file.');
+        if (!(fs.existsSync(`./node_modules/${exportingPackageName}/${packageConfig.wine.grapeseedsfile}`) || fs.existsSync(`./node_modules/${exportingPackageName}/grape-seeds.json`))) return Wine.sip('This package is not a wine package.');
 
         let grapeseedsConfig;
         try {
             try {
-                grapeseedsConfig = require(`./node_modules/${packageName}/${packageConfig.wine.grapeseedsfile}`);
+                grapeseedsConfig = require(`./node_modules/${exportingPackageName}/${packageConfig.wine.grapeseedsfile}`);
             } catch (e) {
-                grapeseedsConfig = require(`./node_modules/${packageName}/grape-seeds.json`);
+                grapeseedsConfig = require(`./node_modules/${exportingPackageName}/grape-seeds.json`);
             }
         } catch (e) {
-            return failanddelete(`There was an error trying to import the package's grape-seeds.json.`);
+            return Wine.sip(`There was an error trying to import the package's grape-seeds.json.`);
         }
-        if (!!!grapeseedsConfig.copypath) return failanddelete('Winery folder not found for module.');
+        if (!!!grapeseedsConfig.copypath) return Wine.sip('Winery folder not found for module.');
         try {
-            this.imports.cmd(`cp -a node_modules/${packageName}/${grapeseedsConfig.copypath}/. winery`);
+            this.imports.cmd(`cp -a ./node_modules/${exportingPackageName}/${grapeseedsConfig.copypath}/. winery`);
         } catch (e) {
-            return failanddelete('Could not copy winery folder to current directory.');
+            return Wine.sip('Could not copy winery folder to current directory.');
         }
 
-        Wine.sip(`The installation of ${packageName} was successful!`);
-        Wine.sip(`Read the README.md file for ${packageName} before you use it.`);
+        Wine.sip('Successfully planted the grape seeds!');
+        if (readlineSync.keyInYN('Would you like to manually update your wine.json?')) return Wine.sip('Please change your wine.json to use the exported winery folder.');
+
+        this.config.wine.wineryfile = './winery/winery.js';
     }
 }
 
