@@ -103,11 +103,18 @@ class Wine {
     }
 
     loadInstalledWinery(args) {
+        Wine.sip(`Running ${this.config.wine.usingwinepackage}'s winery...`);
         try {
             try {
-                this.imports.Winery = require(this.config.wine.wineryfile);
+                let packageConfig;
+                try {
+                    packageConfig = require(`./node_modules/${this.config.wine.usingwinepackage}/wine.json`);
+                } catch (e) {
+                    return Wine.sip(`${this.config.wine.usingwinepackage}'s wine.json could not be loaded.`);
+                }
+                this.imports.Winery = require(`./node_modules/${this.config.wine.usingwinepackage}/${packageConfig.wine.wineryfile}`);
             } catch (e) {
-                return Wine.sip('Your winery file could not be found. Please check your wine.json file.');
+                return Wine.sip(`${this.config.wine.usingwinepackage}'s wineryfile could not be loaded.`);
             }
             this.winery = new this.imports.Winery();
             let script = this.winery.action(args);
@@ -116,29 +123,25 @@ class Wine {
 
             Wine.sip(script.startText);
 
-            Wine.sip('|---------- Opening Wine Box ----------|');
-
             try {
                 script.run(args);
-                Wine.sip('|---------- Closing Wine Box ----------|');
                 Wine.sip('All done!');
             } catch (e) {
-                Wine.sip('|---------- Closing Wine Box ----------|');
-                Wine.sip('There was an error when spinning up your winery.');
+                Wine.sip('There was an error when spinning up the winery.');
             }
 
         } catch (e) {
             if (this.config.wine.printCommands) {
                 console.log(e);
             }
-            console.log('Your winery file or application threw an error. The error has been logged in your wine.log file.');
+            Wine.sip('The winery file or application threw an error. The error has been logged in your wine.log file.');
             Wine.errlog(e);
         }
     }
 
     loadWinery(args) {
-
-
+        if (!!this.config.wine.usingwinepackage && this.config.wine.usingwinepackage !== 'none') return this.loadInstalledWinery(args);
+        return this.loadWinery(args);
     }
 
     loadUserWinery(args) {
@@ -266,8 +269,18 @@ class Wine {
             return failanddelete('The package config is not configured correctly.');
         }
 
+        if (!readlineSync.keyInYN('Would you like to manually configure your wine.json to support the installed package?')) {
+            this.config.wine.usingwinepackage = packageName;
+            this.config.wine.wineryfile = '';
+            Wine.setFile({
+                file : 'wine.json',
+                data : JSON.stringify(this.config, null, 2),
+            });
+        }
+
         Wine.sip(`The installation of ${packageName} was successful!`);
         Wine.sip(`Read the README.md file for ${packageName} before you use it.`);
+
     }
 
     plant() {
@@ -308,6 +321,13 @@ class Wine {
         if (readlineSync.keyInYN('Would you like to manually update your wine.json?')) return Wine.sip('Please change your wine.json to use the exported winery folder.');
 
         this.config.wine.wineryfile = './winery/winery.js';
+        Wine.setFile({
+            file : 'wine.json',
+            data : JSON.stringify(this.config, null, 2),
+        });
+
+        if (fs.existsSync('./winery.js')) return Wine.sip('Your winery.js is no longer in use. You may remove it.');
+
     }
 }
 

@@ -25,6 +25,7 @@ https://grape-juice.org/guides/creating-packages/
 
 ##### - Commands
 * `inst <packagename>` - This will install a wine package that has been published to npm.
+* `plant` - This will export the currently installed wine package to your project's directory for the ability to edit the wineryfile and the bottles.
 
 #### Packages
 * `vinefile`
