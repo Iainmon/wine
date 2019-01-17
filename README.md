@@ -4,6 +4,13 @@ A way tool to help you create environments for individual projects for testing a
 
 # Installation
 
+Easy Install
+```bash
+$ npm install -g wine-cli
+$ wine
+```
+
+Locally Install
 * `$ npm install grapejuice`
 * `$ cp ./node_modules/grapejuice/wine wine`
 * Add `alias wine="node wine"` to your bash profile. (optional)
