@@ -1,8 +1,8 @@
 {
   "name": "grapejuice",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "A highly customizable project environment command line tool.",
-  "main": "wine",
+  "main": "index.js",
   "scripts": {},
   "repository": {
     "type": "git",

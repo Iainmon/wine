@@ -1,7 +1,8 @@
 {
   "wine": {
     "printCommands": true,
-    "wineryfile": "./winery.js",
-    "usingwinepackage" : "none"
+    "package": {
+      "name": "laravel-wine"
+    }
   }
 }
